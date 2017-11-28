@@ -28,6 +28,11 @@ nbactions.xml
 /web/src/main/java/assets/combined.min.js
 /web/src/main/java/assets/combined.js
 
+#eclipse
+.project
+.settings/
+.classpath
+
 #OSX specific
 .DS_Store
 /settings.xml
