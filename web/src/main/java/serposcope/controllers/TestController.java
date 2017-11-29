@@ -15,6 +15,7 @@ import com.serphacker.serposcope.models.base.Group;
 import com.serphacker.serposcope.models.base.Run;
 import com.serphacker.serposcope.models.base.User;
 import com.serphacker.serposcope.models.base.Group.Module;
+import com.serphacker.serposcope.models.google.GoogleSearch;
 import com.serphacker.serposcope.models.google.GoogleTarget;
 import com.serphacker.serposcope.models.google.GoogleTarget.PatternType;
 
@@ -75,18 +76,21 @@ public class TestController extends BaseController {
 		m.put("test", "sdgdjfgsdkfh");
 
 		Group group = getOrCreateGroup(context, websiteCheckerGroup);
+
+		String targetType = "";
+		String[] names = { "", "" };
+		String[] patterns = { "", "" };
+		addWebsite(context, group, targetType, names, patterns);
 		return Results.ok().render(m);
 	}
 
-	public Result addWebsite(Context context, Group group, String targetType, String[] names,
-			String[] patterns) {
+	public GoogleTarget addWebsite(Context context, Group group, String targetType, String[] names, String[] patterns) {
 		FlashScope flash = context.getFlashScope();
-		
+
 		if (targetType == null || names == null || names.length == 0 || patterns == null || patterns.length == 0
 				|| names.length != patterns.length) {
-			flash.error("error.invalidParameters");
-			return Results
-					.redirect(router.getReverseRoute(GoogleGroupController.class, "view", "groupId", group.getId()));
+			LOG.info("");
+			return null;
 		}
 
 		Set<GoogleTarget> targets = new HashSet<>();
@@ -103,18 +107,16 @@ public class TestController extends BaseController {
 			}
 
 			if (Validator.isEmpty(name)) {
-				flash.error("error.invalidName");
-				return Results.redirect(
-						router.getReverseRoute(GoogleGroupController.class, "view", "groupId", group.getId()));
+				LOG.info("");
+				return null;
 			}
 
 			PatternType type = null;
 			try {
 				type = PatternType.valueOf(targetType);
 			} catch (Exception ex) {
-				flash.error("error.invalidTargetType");
-				return Results.redirect(
-						router.getReverseRoute(GoogleGroupController.class, "view", "groupId", group.getId()));
+				LOG.info("");
+				return null;
 			}
 
 			if (PatternType.DOMAIN.equals(type) || PatternType.SUBDOMAIN.equals(type)) {
@@ -126,31 +128,26 @@ public class TestController extends BaseController {
 			}
 
 			if (!GoogleTarget.isValidPattern(type, pattern)) {
-				flash.error("error.invalidPattern");
-				return Results.redirect(
-						router.getReverseRoute(GoogleGroupController.class, "view", "groupId", group.getId()));
+				LOG.info("");
+				return null;
 			}
 
 			targets.add(new GoogleTarget(group.getId(), name, type, pattern));
 		}
 
 		if (googleDB.target.insert(targets) < 1) {
-			flash.error("error.internalError");
-			return Results
-					.redirect(router.getReverseRoute(GoogleGroupController.class, "view", "groupId", group.getId()));
+			LOG.info("");
+			return null;
 		}
 		googleDB.serpRescan.rescan(null, targets, getSearches(context), true);
 
-		Run runningGoogleTask = taskManager.getRunningGoogleTask();
-		if (runningGoogleTask != null) {
-			flash.put("warning", msg
-					.get("google.group.websiteInsertedWhileRun", context, Optional.absent(), runningGoogleTask.getId())
-					.or(""));
-		} else {
-			flash.success("google.group.websiteInserted");
-		}
+		//Here getting GoogleTarget
 
-		return Results.redirect(router.getReverseRoute(GoogleGroupController.class, "view", "groupId", group.getId()));
+		return null;
+	}
+
+	protected List<GoogleSearch> getSearches(Context context) {
+		return context.getAttribute("searches", List.class);
 	}
 
 	public Group getOrCreateGroup(Context context, String name) {
