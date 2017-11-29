@@ -247,8 +247,7 @@ public enum GoogleCountryCode {
     EH("Western Sahara"),
     YE("Yemen"),
     ZM("Zambia"),
-    ZW("Zimbabwe")
-    ;
+    ZW("Zimbabwe");
 
     public final String fancyName;
 

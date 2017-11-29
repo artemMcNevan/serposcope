@@ -10,7 +10,11 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-6">
-				<div>${test}</div>
+				<#if isError >
+					<div>${error}</div>
+				<#else>
+					<div>${test}</div>
+				</#if>
 			</div>
 		</div>
 	</div>

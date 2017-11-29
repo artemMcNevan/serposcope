@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="serp" type="com.serphacker.serposcope.models.google.GoogleSerp" -->
 <#import "../google.ftl.html" as layout>
 <@layout.googleLayout group.getName() >
-
+${default}
 <div class="row">
     <div class="col-sm-4" >
         <ol class="breadcrumb" >
@@ -86,6 +86,7 @@
 
                     <div class="form-group" >
                         <label for="country" >${i18n("label.country")}</label>
+                        
                         <#noescape>${fu.countryCombo("country[]", default.getDefaultCountry())}</#noescape>
                         <span class="help-block">${i18n("admin.google.countryHelp")}</span>
                     </div>
