@@ -15,6 +15,7 @@ import serposcope.controllers.admin.UsersController;
 import serposcope.controllers.AuthController;
 import serposcope.controllers.GroupController;
 import serposcope.controllers.HomeController;
+import serposcope.controllers.TestController;
 import serposcope.controllers.UserPreferences;
 import serposcope.controllers.admin.AdminController;
 import serposcope.controllers.admin.DebugController;
@@ -31,6 +32,9 @@ public class Routes implements ApplicationRoutes {
 
     @Override
     public void init(Router router) {  
+    	
+    	//Tests
+        router.GET().route("/test").with(TestController.class, "doTest");
         
         // authentication
         router.GET().route("/create-admin").with(AuthController.class, "createAdmin");
