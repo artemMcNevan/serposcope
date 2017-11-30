@@ -70,6 +70,10 @@ public class TestController extends BaseController {
 
 	static final String websiteCheckerGroup = "DM Website Checker";
 
+	public Result getTest() {
+		return Results.json().render("key", "dfsgdf");
+
+	}
 	public Result doTest(Context context) {
 		Map<String, Object> m = new HashMap<String, Object>();
 		if (!login(context, email, password, true)) {

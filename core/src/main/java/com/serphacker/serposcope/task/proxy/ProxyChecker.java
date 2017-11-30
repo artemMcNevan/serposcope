@@ -87,6 +87,7 @@ public class ProxyChecker extends Thread {
                     
 //                    try{Thread.sleep(30000l);}catch(Exception ex){}
                     
+                    
                     int httpStatus = cli.get(judgeUrl);
                     if(httpStatus == 200 && cli.getContentAsString() != null){
                         Matcher matcher = PATTERN_IP.matcher(cli.getContentAsString());
@@ -94,6 +95,8 @@ public class ProxyChecker extends Thread {
                             proxy.setRemoteip(matcher.group(1));
                             proxyStatus = Proxy.Status.OK;
                         }
+                        else
+                        	LOG.info("Proxy " + judgeUrl + " err| " + cli.getContentAsString());
                     }
                     
                     proxy.setStatus(proxyStatus);

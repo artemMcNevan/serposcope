@@ -35,6 +35,8 @@ public class Routes implements ApplicationRoutes {
     	
     	//Tests
         router.GET().route("/test").with(TestController.class, "doTest");
+        router.GET().route("/gest").with(TestController.class, "getTest");
+        
         
         // authentication
         router.GET().route("/create-admin").with(AuthController.class, "createAdmin");
