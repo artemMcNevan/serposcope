@@ -281,7 +281,7 @@ public class GoogleGroupController extends GoogleController {
         @Param("target-radio") String targetType,
         @Params("name[]") String[] names,
         @Params("pattern[]") String[] patterns
-    ) {
+    ) {	
         FlashScope flash = context.getFlashScope();
         Group group = context.getAttribute("group", Group.class);
 

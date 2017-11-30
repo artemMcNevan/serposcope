@@ -18,6 +18,8 @@ import com.serphacker.serposcope.models.base.Group.Module;
 import com.serphacker.serposcope.models.google.GoogleSearch;
 import com.serphacker.serposcope.models.google.GoogleTarget;
 import com.serphacker.serposcope.models.google.GoogleTarget.PatternType;
+import com.serphacker.serposcope.scraper.google.GoogleCountryCode;
+import com.serphacker.serposcope.scraper.google.GoogleDevice;
 
 import conf.SerposcopeConf;
 
@@ -37,6 +39,7 @@ import ninja.params.Params;
 import ninja.session.FlashScope;
 import ninja.session.Session;
 import serposcope.controllers.google.GoogleGroupController;
+import serposcope.helpers.GoogleHelper;
 import serposcope.helpers.Validator;
 
 @Singleton
@@ -63,6 +66,8 @@ public class TestController extends BaseController {
 	static final String email = "abaltser@akolchin.com";
 	static final String password = "qewret";
 
+	static final String[] targetTypes = { "DOMAIN", "SUBDOMAIN", "REGEX" };
+
 	static final String websiteCheckerGroup = "DM Website Checker";
 
 	public Result doTest(Context context) {
@@ -75,107 +80,16 @@ public class TestController extends BaseController {
 		m.put("isError", false);
 		m.put("test", "sdgdjfgsdkfh");
 
-		Group group = getOrCreateGroup(context, websiteCheckerGroup);
+		GoogleHelper gHelper = new GoogleHelper(baseDB, googleDB);
 
-		String targetType = "";
-		String[] names = { "", "" };
-		String[] patterns = { "", "" };
-		addWebsite(context, group, targetType, names, patterns);
+		Group group = gHelper.getOrCreateGroup(context, websiteCheckerGroup);
+
+		String targetType = targetTypes[0];
+		String name = "www.digitalmonopoly.com.au";
+		String pattern = "www.digitalmonopoly.com.au";
+		GoogleTarget target = gHelper.addWebsite(context, group, targetType, name, pattern);
+		GoogleSearch search = gHelper.addSearch(context, group, "testSearch", GoogleCountryCode.__.toString(), "", 0, "", "");
 		return Results.ok().render(m);
-	}
-
-	public GoogleTarget addWebsite(Context context, Group group, String targetType, String[] names, String[] patterns) {
-		FlashScope flash = context.getFlashScope();
-
-		if (targetType == null || names == null || names.length == 0 || patterns == null || patterns.length == 0
-				|| names.length != patterns.length) {
-			LOG.info("");
-			return null;
-		}
-
-		Set<GoogleTarget> targets = new HashSet<>();
-		for (int i = 0; i < names.length; i++) {
-			String name = names[i];
-			String pattern = patterns[i];
-
-			if (name != null) {
-				name = name.replaceAll("(^\\s+)|(\\s+$)", "");
-			}
-
-			if (pattern != null) {
-				pattern = pattern.replaceAll("(^\\s+)|(\\s+$)", "");
-			}
-
-			if (Validator.isEmpty(name)) {
-				LOG.info("");
-				return null;
-			}
-
-			PatternType type = null;
-			try {
-				type = PatternType.valueOf(targetType);
-			} catch (Exception ex) {
-				LOG.info("");
-				return null;
-			}
-
-			if (PatternType.DOMAIN.equals(type) || PatternType.SUBDOMAIN.equals(type)) {
-				try {
-					pattern = IDN.toASCII(pattern);
-				} catch (Exception ex) {
-					pattern = null;
-				}
-			}
-
-			if (!GoogleTarget.isValidPattern(type, pattern)) {
-				LOG.info("");
-				return null;
-			}
-
-			targets.add(new GoogleTarget(group.getId(), name, type, pattern));
-		}
-
-		if (googleDB.target.insert(targets) < 1) {
-			LOG.info("");
-			return null;
-		}
-		googleDB.serpRescan.rescan(null, targets, getSearches(context), true);
-
-		//Here getting GoogleTarget
-
-		return null;
-	}
-
-	protected List<GoogleSearch> getSearches(Context context) {
-		return context.getAttribute("searches", List.class);
-	}
-
-	public Group getOrCreateGroup(Context context, String name) {
-		Module module = null;
-
-		List<Group> groups = baseDB.group.list();
-		for (Group group : groups) {
-			if (group.getName().toLowerCase().equals(name.toLowerCase())) {
-				return group;
-			}
-		}
-
-		if (name == null || name.isEmpty()) {
-			LOG.info("Group name is empty");
-			return null;
-		}
-
-		try {
-			module = Module.values()[0];
-		} catch (Exception ex) {
-			LOG.info("Exception during creation group");
-			return null;
-		}
-
-		Group group = new Group(module, name);
-		baseDB.group.insert(group);
-
-		return group;
 	}
 
 	public boolean login(Context context, String email, String password, Boolean rememberMe) {
