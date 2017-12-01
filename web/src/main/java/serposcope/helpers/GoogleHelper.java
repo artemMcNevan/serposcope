@@ -1,6 +1,9 @@
 package serposcope.helpers;
 
+import static com.serphacker.serposcope.models.base.Group.Module.GOOGLE;
+
 import java.net.IDN;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -11,16 +14,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mysema.commons.lang.CloseableIterator;
+import com.querydsl.core.Tuple;
+import com.querydsl.sql.SQLQuery;
 import com.serphacker.serposcope.db.base.BaseDB;
 import com.serphacker.serposcope.db.google.GoogleDB;
+import com.serphacker.serposcope.db.google.GoogleRankDB;
+import com.serphacker.serposcope.db.google.GoogleSearchDB;
+import com.serphacker.serposcope.db.google.GoogleSerpDB;
+import com.serphacker.serposcope.db.google.GoogleTargetSummaryDB;
 import com.serphacker.serposcope.models.base.Group;
 import com.serphacker.serposcope.models.base.Run;
 import com.serphacker.serposcope.models.base.User;
@@ -36,7 +49,9 @@ import com.serphacker.serposcope.scraper.google.GoogleCountryCode;
 import com.serphacker.serposcope.scraper.google.GoogleDevice;
 
 import ninja.Context;
+import ninja.Results;
 import ninja.session.FlashScope;
+import serposcope.controllers.HomeController;
 
 public class GoogleHelper {
 
@@ -44,136 +59,52 @@ public class GoogleHelper {
 
 	protected BaseDB baseDB;
 	protected GoogleDB googleDB;
+	protected GoogleSearchDB searchDB;
+	protected GoogleRankDB rankDB;
+	protected GoogleSerpDB serpDB;
+	protected GoogleTargetSummaryDB targetSummaryDB;
 
 	public GoogleHelper(BaseDB baseDB, GoogleDB googleDB) {
 		this.baseDB = baseDB;
 		this.googleDB = googleDB;
 	}
-	/*
-    public void rescan(Integer specificRunId, Collection<GoogleTarget> targets, Collection<GoogleSearch> searches,  boolean updateSummary) {
-        LOG.debug("SERP rescan (bulk) : starting");
-        long _start = System.currentTimeMillis();
-        Map<Integer, Integer> searchCountByGroup = searchDB.countByGroup();
-        Run specPrevRun = null;
-        Map<Integer, GoogleTargetSummary> specPrevRunSummaryByTarget = new HashMap<>();
-        
-        if(specificRunId != null){
-            specPrevRun = runDB.findPrevious(specificRunId);
-            if(specPrevRun != null){
-                specPrevRunSummaryByTarget = targetSummaryDB.list(specPrevRun.getId()).stream()
-                    .collect(Collectors.toMap(GoogleTargetSummary::getTargetId, Function.identity()));
-            }
-        }        
-        
-        List<GoogleRank> ranks = new ArrayList<>();
-        for (GoogleTarget target : targets) {
-            
-            Map<Integer, GoogleTargetSummary> summaryByRunId = new HashMap<>();
-            GoogleTargetSummary specificPreviousSummary = specPrevRunSummaryByTarget.get(target.getId());
-            if(specificPreviousSummary != null){
-                summaryByRunId.put(specPrevRun.getId(), specificPreviousSummary);
-            }
-            
-            for (GoogleSearch search : searches) {
-                final MutableInt previousRunId = new MutableInt(0);
-                final MutableInt previousRank = new MutableInt(GoogleRank.UNRANKED);
-                GoogleBest searchBest = new GoogleBest(target.getGroupId(), target.getId(), search.getId(), GoogleRank.UNRANKED, null, null);
-                
-                if(specPrevRun != null){
-                    previousRunId.setValue(specPrevRun.getId());
-                    previousRank.setValue(rankDB.get(specPrevRun.getId(), target.getGroupId(), target.getId(), search.getId()));
-                    GoogleBest specificBest = rankDB.getBest(target.getGroupId(), target.getId(), search.getId());
-                    if(specificBest != null){
-                        searchBest = specificBest;
-                    }
-                }
-                final GoogleBest best = searchBest;
 
-                serpDB.stream(specificRunId, specificRunId, search.getId(), (GoogleSerp res) -> {
-                    
-                    int rank = GoogleRank.UNRANKED;
-                    String rankedUrl = null;
-                    for (int i = 0; i < res.getEntries().size(); i++) {
-                        if (target.match(res.getEntries().get(i).getUrl())) {
-                            rankedUrl = res.getEntries().get(i).getUrl();
-                            rank = i + 1;
-                            break;
-                        }
-                    }
+	public void setSearchDB(GoogleSearchDB searchDB) {
+		this.searchDB = searchDB;
+	}
 
-                    // only update last run
-                    GoogleRank gRank = new GoogleRank(res.getRunId(), target.getGroupId(), target.getId(), search.getId(),
-                        rank, previousRank.shortValue(), rankedUrl);
-                    ranks.add(gRank);
-                    if(ranks.size() > 2000){
-                        rankDB.insert(ranks);
-                        ranks.clear();
-                    }
-                    
-                    if(updateSummary){
-                        GoogleTargetSummary summary = summaryByRunId.get(res.getRunId());
-                        if (summary == null) {
-                            summaryByRunId.put(res.getRunId(), summary = new GoogleTargetSummary(target.getGroupId(),
-                                target.getId(), res.getRunId(), 0));
-                        }
-                        summary.addRankCandidat(gRank);
-                    }                    
+	public void setRankDB(GoogleRankDB rankDB) {
+		this.rankDB = rankDB;
+	}
+	
+	public void setTargetSummaryDB(GoogleTargetSummaryDB targetSummaryDB) {
+		this.targetSummaryDB = targetSummaryDB;
+	}
 
-                    if (rank != GoogleRank.UNRANKED && rank <= best.getRank()) {
-                        best.setRank((short) rank);
-                        best.setUrl(rankedUrl);
-                        best.setRunDay(res.getRunDay());
-                    }
+	public void setSerpDB(GoogleSerpDB serpDB) {
+		this.serpDB = serpDB;
+	}
 
-                    previousRunId.setValue(res.getRunId());
-                    previousRank.setValue(rank);
-                });
-                
-                if (best.getRank() != GoogleRank.UNRANKED) {
-                    rankDB.insertBest(best);
-                }
-            }
-            
-            // fill previous summary score
-            if(updateSummary){
-                TreeMap<Integer, GoogleTargetSummary> summaries = new TreeMap<>(summaryByRunId);
-                
-                GoogleTargetSummary previousSummary = null;
-                for (Map.Entry<Integer, GoogleTargetSummary> entry : summaries.entrySet()) {
-                    GoogleTargetSummary summary = entry.getValue();
-                    summary.computeScoreBP(searchCountByGroup.getOrDefault(summary.getGroupId(), 0));
-                    if (previousSummary != null) {
-                        summary.setPreviousScoreBP(previousSummary.getScoreBP());
-                    }
-                    previousSummary = summary;
-                }
-                
-                if(specPrevRun != null){
-                    summaries.remove(specPrevRun.getId());
-                }
-                
-                if(!summaries.isEmpty()){
-                    targetSummaryDB.insert(summaries.values());
-                }
-            }
-        }
-        
-        if(!ranks.isEmpty()){
-            rankDB.insert(ranks);
-            ranks.clear();
-        }
-        
-        LOG.debug("SERP rescan : done, duration = {}", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis()-_start));
-    } 
-*/
-	public GoogleSearch addSearch(Context context, Group group, String keyword, String country, String datacenter, Integer device,
+	public void startScan() {
+	
+	    
+	     
+	}
+
+	public GoogleSearch addSearch(Group group, String keyword, String country, String datacenter, Integer device,
 			String local, String custom) {
-		FlashScope flash = context.getFlashScope();
-
 		if (keyword == null || country == null || datacenter == null || device == null || local == null
 				|| custom == null) {
 			LOG.info("Searches adding error #1");
 			return null;
+		}
+
+		List<GoogleSearch> foundSearches = getSearches();
+		for (GoogleSearch sh : foundSearches) {
+			if (sh.getKeyword().toLowerCase().equals(keyword.toLowerCase())) {
+				LOG.info("Can't create search with the same keyword");
+				return null;
+			}
 		}
 
 		Set<GoogleSearch> searches = new HashSet<>();
@@ -230,12 +161,18 @@ public class GoogleHelper {
 		return search;
 	}
 
-	public GoogleTarget addWebsite(Context context, Group group, String targetType, String name, String pattern) {
-		FlashScope flash = context.getFlashScope();
-
+	public GoogleTarget addWebsite(Group group, String targetType, String name, String pattern) {
 		if (targetType == null || name == null || pattern == null) {
 			LOG.info("Target insert error #0");
 			return null;
+		}
+		List<GoogleTarget> foundTargets = this.getTargets();
+
+		for (GoogleTarget tg : foundTargets) {
+			if (tg.getName().toLowerCase().equals(name.toLowerCase())) {
+				LOG.info("Can't create target with the same name");
+				return null;
+			}
 		}
 
 		Set<GoogleTarget> targets = new HashSet<>();
@@ -287,7 +224,7 @@ public class GoogleHelper {
 		return target;
 	}
 
-	public Group getOrCreateGroup(Context context, String name) {
+	public Group getOrCreateGroup(String name) {
 		Module module = null;
 
 		List<Group> groups = baseDB.group.list();

@@ -34,7 +34,7 @@ public class Routes implements ApplicationRoutes {
     public void init(Router router) {  
     	
     	//Tests
-        router.GET().route("/test").with(KeywordsController.class, "doTest");
+        router.GET().route("/api").with(KeywordsController.class, "api");
         router.GET().route("/gest").with(KeywordsController.class, "getTest");
         
         

@@ -70,11 +70,33 @@ public class KeywordsController extends BaseController {
 
 	static final String websiteCheckerGroup = "DM Website Checker";
 
-	public Result getTest() {
-		return Results.json().render("key", "dfsgdf");
+	public Result getTest(@Param("arr[]") String[] arr) {
+		Map<String, Object> m = new HashMap<String, Object>();
+		m.put("key", "dfsgdf");
+		GoogleHelper gHelper = new GoogleHelper(baseDB, googleDB);
+
+		Group group = gHelper.getOrCreateGroup(websiteCheckerGroup);
+
+		String website = "www.digitalmonopoly.com";
+		String country = "AU";
+		String keyword = "digital agency perth";
+
+		String targetType = targetTypes[0];
+		String name = website;
+		String pattern = website;
+		GoogleCountryCode countryCode = GoogleCountryCode.valueOf(country);
+		GoogleTarget target = gHelper.addWebsite(group, targetType, name, pattern);
+		GoogleSearch search = gHelper.addSearch(group, keyword, countryCode.toString(), "", 0, "", "");
+		if (target == null || search == null)
+			m.put("isError", true);
+			
+		
+		return Results.json().render(m);
 
 	}
-	public Result doTest(Context context, @Param("website")String website, @Param("country")String country, @Param("keyword")String keyword) {
+
+	public Result api(Context context, @Param("website") String website, @Param("country") String country,
+			@Param("keyword[]") String[] keywords) {
 		Map<String, Object> m = new HashMap<String, Object>();
 		if (!login(context, email, password, true)) {
 			m.put("error", "this is an auth error");
@@ -85,20 +107,30 @@ public class KeywordsController extends BaseController {
 
 		GoogleHelper gHelper = new GoogleHelper(baseDB, googleDB);
 
-		Group group = gHelper.getOrCreateGroup(context, websiteCheckerGroup);
+		Group group = gHelper.getOrCreateGroup(websiteCheckerGroup);
 
 		String targetType = targetTypes[0];
 		String name = website;
 		String pattern = website;
 		GoogleCountryCode countryCode = GoogleCountryCode.valueOf(country);
-		GoogleTarget target = gHelper.addWebsite(context, group, targetType, name, pattern);
-		GoogleSearch search = gHelper.addSearch(context, group, keyword, countryCode.toString() , "", 0, "", "");
-		
+		GoogleTarget target = gHelper.addWebsite(group, targetType, name, pattern);
+
 		m.put("website", website);
-		m.put("keyword", keyword);
+
 		m.put("group", group.getName());
-		m.put("target", target.getName());
-		m.put("search", search.getKeyword());
+		if (target != null)
+			m.put("target", target.getName());
+
+		if (keywords != null) {
+			Map<String, Object> kws = new HashMap<String, Object>();
+			for (String keyword : keywords) {
+				GoogleSearch search = gHelper.addSearch(group, keyword, countryCode.toString(), "", 0, "", "");
+				if (search != null)
+					kws.put(search.getKeyword(), "added");
+
+			}
+			m.put("search[]", kws);
+		}
 		return Results.json().render(m);
 	}
 

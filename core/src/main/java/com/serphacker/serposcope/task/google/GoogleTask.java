@@ -49,32 +49,32 @@ public class GoogleTask extends AbstractTask {
 
     protected static final Logger LOG = LoggerFactory.getLogger(GoogleTask.class);
     
-    GoogleScraperFactory googleScraperFactory;
-    CaptchaSolverFactory captchaSolverFactory;
-    ScrapClientFactory scrapClientFactory;
+    protected  GoogleScraperFactory googleScraperFactory;
+    protected CaptchaSolverFactory captchaSolverFactory;
+    protected ScrapClientFactory scrapClientFactory;
     
-    GoogleDB googleDB;
-    ProxyRotator rotator;
+    protected GoogleDB googleDB;
+    protected  ProxyRotator rotator;
 
-    Run previousRun;
-    final Map<Short,Integer> previousRunsByDay = new ConcurrentHashMap<>();
-    final Map<Integer,List<GoogleTarget>> targetsByGroup = new ConcurrentHashMap<>();
-    final Map<Integer,GoogleTargetSummary> summariesByTarget = new ConcurrentHashMap<>();
+    protected  Run previousRun;
+    protected  final Map<Short,Integer> previousRunsByDay = new ConcurrentHashMap<>();
+    protected final Map<Integer,List<GoogleTarget>> targetsByGroup = new ConcurrentHashMap<>();
+    protected final Map<Integer,GoogleTargetSummary> summariesByTarget = new ConcurrentHashMap<>();
     
-    LinkedBlockingQueue<GoogleSearch> searches;
-    GoogleSettings googleOptions;
+    protected LinkedBlockingQueue<GoogleSearch> searches;
+    protected GoogleSettings googleOptions;
     protected final AtomicInteger searchDone = new AtomicInteger();
-    final AtomicInteger captchaCount = new AtomicInteger();
+    protected final AtomicInteger captchaCount = new AtomicInteger();
     
-    Thread[] threads;
-    volatile int totalSearch;
-    volatile boolean interrupted;
+    protected  Thread[] threads;
+    protected volatile int totalSearch;
+    protected volatile boolean interrupted;
     
-    CaptchaSolver solver;
-    String httpUserAgent;
-    int httpTimeoutMS;
-    boolean updateRun;
-    boolean shuffle = true;
+    protected CaptchaSolver solver;
+    protected String httpUserAgent;
+    protected int httpTimeoutMS;
+    protected boolean updateRun;
+    protected boolean shuffle = true;
     
     @Inject
     public GoogleTask(
