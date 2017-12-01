@@ -43,10 +43,10 @@ import serposcope.helpers.GoogleHelper;
 import serposcope.helpers.Validator;
 
 @Singleton
-public class TestController extends BaseController {
+public class KeywordsController extends BaseController {
 	public final static String PASSWORD_RESET_FILENAME = "password-reset.txt";
 
-	private static final Logger LOG = LoggerFactory.getLogger(TestController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KeywordsController.class);
 
 	protected final static Long SESSION_NORMAL_LIFETIME = 2 * 60 * 60 * 1000L;
 	protected final static Long SESSION_REMEMBER_LIFETIME = 30 * 24 * 60 * 60 * 1000L;
@@ -74,7 +74,7 @@ public class TestController extends BaseController {
 		return Results.json().render("key", "dfsgdf");
 
 	}
-	public Result doTest(Context context) {
+	public Result doTest(Context context, @Param("website")String website, @Param("country")String country, @Param("keyword")String keyword) {
 		Map<String, Object> m = new HashMap<String, Object>();
 		if (!login(context, email, password, true)) {
 			m.put("error", "this is an auth error");
@@ -82,18 +82,24 @@ public class TestController extends BaseController {
 			return Results.forbidden().render(m);
 		}
 		m.put("isError", false);
-		m.put("test", "sdgdjfgsdkfh");
 
 		GoogleHelper gHelper = new GoogleHelper(baseDB, googleDB);
 
 		Group group = gHelper.getOrCreateGroup(context, websiteCheckerGroup);
 
 		String targetType = targetTypes[0];
-		String name = "www.digitalmonopoly.com.au";
-		String pattern = "www.digitalmonopoly.com.au";
+		String name = website;
+		String pattern = website;
+		GoogleCountryCode countryCode = GoogleCountryCode.valueOf(country);
 		GoogleTarget target = gHelper.addWebsite(context, group, targetType, name, pattern);
-		GoogleSearch search = gHelper.addSearch(context, group, "testSearch", GoogleCountryCode.__.toString(), "", 0, "", "");
-		return Results.ok().render(m);
+		GoogleSearch search = gHelper.addSearch(context, group, keyword, countryCode.toString() , "", 0, "", "");
+		
+		m.put("website", website);
+		m.put("keyword", keyword);
+		m.put("group", group.getName());
+		m.put("target", target.getName());
+		m.put("search", search.getKeyword());
+		return Results.json().render(m);
 	}
 
 	public boolean login(Context context, String email, String password, Boolean rememberMe) {

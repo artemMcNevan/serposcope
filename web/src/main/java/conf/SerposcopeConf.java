@@ -31,6 +31,8 @@ public class SerposcopeConf {
     public boolean dbDebug;
     public String listenAddress;
     public int listenPort;
+    
+    public static final String defaultPort = "8080";
 
     Properties props;
 
@@ -97,9 +99,9 @@ public class SerposcopeConf {
         dbDebug = "true".equals(props.getProperty("serposcope.db.debug", "false"));
         listenAddress = props.getProperty("serposcope.listenAddress", "0.0.0.0");
         try {
-            listenPort = Integer.parseInt(props.getProperty("serposcope.listenPort", "7134"));
+            listenPort = Integer.parseInt(props.getProperty("serposcope.listenPort", defaultPort));
         } catch(Exception ex){
-            listenPort = 7134;
+            listenPort = Integer.parseInt(defaultPort);
         }
     }
     
@@ -119,9 +121,9 @@ public class SerposcopeConf {
         dbDebug = "true".equals(props.getProperty("serposcope.db.debug", "false"));
         listenAddress = props.getProperty("serposcope.listenAddress", "0.0.0.0");
         try {
-            listenPort = Integer.parseInt(props.getProperty("serposcope.listenPort", "1024"));
+            listenPort = Integer.parseInt(props.getProperty("serposcope.listenPort", defaultPort));
         } catch(Exception ex){
-            listenPort = 1024;
+            listenPort = Integer.parseInt(defaultPort);
         }
     }
     

@@ -82,13 +82,14 @@ public class ProxyChecker extends Thread {
                     cli.setProxy(scrapProxy);
                     
                     LOG.info("checking {}", scrapProxy);
-                    
-                    Proxy.Status proxyStatus = Proxy.Status.ERROR;
+                
+                    Proxy.Status proxyStatus = Proxy.Status.OK;
                     
 //                    try{Thread.sleep(30000l);}catch(Exception ex){}
                     
                     
                     int httpStatus = cli.get(judgeUrl);
+                    LOG.info(scrapProxy + " ||| " + cli.getContentAsString());
                     if(httpStatus == 200 && cli.getContentAsString() != null){
                         Matcher matcher = PATTERN_IP.matcher(cli.getContentAsString());
                         if(matcher.find()){
@@ -98,7 +99,7 @@ public class ProxyChecker extends Thread {
                         else
                         	LOG.info("Proxy " + judgeUrl + " err| " + cli.getContentAsString());
                     }
-                    
+                    LOG.info("Proxy error ");
                     proxy.setStatus(proxyStatus);
                     proxy.setLastCheck(LocalDateTime.now());
                     db.proxy.update(proxy);

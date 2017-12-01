@@ -225,7 +225,7 @@ public class GoogleHelper {
 
 		List<GoogleTarget> targets = getTargets();
 
-		googleDB.serpRescan.rescan(null, targets, knownSearches, false);
+		googleDB.serpRescan.rescan(null, targets, knownSearches, true);
 
 		return search;
 	}

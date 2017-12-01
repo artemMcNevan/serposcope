@@ -15,7 +15,7 @@ import serposcope.controllers.admin.UsersController;
 import serposcope.controllers.AuthController;
 import serposcope.controllers.GroupController;
 import serposcope.controllers.HomeController;
-import serposcope.controllers.TestController;
+import serposcope.controllers.KeywordsController;
 import serposcope.controllers.UserPreferences;
 import serposcope.controllers.admin.AdminController;
 import serposcope.controllers.admin.DebugController;
@@ -34,8 +34,8 @@ public class Routes implements ApplicationRoutes {
     public void init(Router router) {  
     	
     	//Tests
-        router.GET().route("/test").with(TestController.class, "doTest");
-        router.GET().route("/gest").with(TestController.class, "getTest");
+        router.GET().route("/test").with(KeywordsController.class, "doTest");
+        router.GET().route("/gest").with(KeywordsController.class, "getTest");
         
         
         // authentication
