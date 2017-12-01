@@ -79,7 +79,7 @@ public class KeywordsController extends BaseController {
 		if (!login(context, email, password, true)) {
 			m.put("error", "this is an auth error");
 			m.put("isError", true);
-			return Results.forbidden().render(m);
+			return Results.json().render(m);
 		}
 		m.put("isError", false);
 
