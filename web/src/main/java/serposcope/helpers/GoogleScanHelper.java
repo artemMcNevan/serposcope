@@ -83,6 +83,7 @@ public class GoogleScanHelper {
 		httpTimeoutMS = ScrapClient.DEFAULT_TIMEOUT_MS;
 	}
 
+	/*
 	public Run.Status scan() {
 		solver = initializeCaptchaSolver();
 		googleOptions = googleDB.options.get();
@@ -202,6 +203,7 @@ public class GoogleScanHelper {
 			}
 		}
 	}
+	*/
 
 	protected void initializeSearches() {
 		List<GoogleSearch> searchList = googleDB.search.list();

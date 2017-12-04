@@ -47,11 +47,14 @@ import com.serphacker.serposcope.models.google.GoogleTargetSummary;
 import com.serphacker.serposcope.models.google.GoogleTarget.PatternType;
 import com.serphacker.serposcope.scraper.google.GoogleCountryCode;
 import com.serphacker.serposcope.scraper.google.GoogleDevice;
+import com.serphacker.serposcope.task.TaskManager;
+import com.serphacker.serposcope.task.google.GoogleTaskResult;
 
 import ninja.Context;
 import ninja.Results;
 import ninja.session.FlashScope;
 import serposcope.controllers.HomeController;
+import serposcope.helpers.objects.ScanResult;
 
 public class GoogleHelper {
 
@@ -63,10 +66,13 @@ public class GoogleHelper {
 	protected GoogleRankDB rankDB;
 	protected GoogleSerpDB serpDB;
 	protected GoogleTargetSummaryDB targetSummaryDB;
+	protected TaskManager taskManager;
 
-	public GoogleHelper(BaseDB baseDB, GoogleDB googleDB) {
+	@Inject
+	public GoogleHelper(BaseDB baseDB, GoogleDB googleDB, TaskManager taskManager) {
 		this.baseDB = baseDB;
 		this.googleDB = googleDB;
+		this.taskManager = taskManager;
 	}
 
 	public void setSearchDB(GoogleSearchDB searchDB) {
@@ -76,7 +82,7 @@ public class GoogleHelper {
 	public void setRankDB(GoogleRankDB rankDB) {
 		this.rankDB = rankDB;
 	}
-	
+
 	public void setTargetSummaryDB(GoogleTargetSummaryDB targetSummaryDB) {
 		this.targetSummaryDB = targetSummaryDB;
 	}
@@ -85,10 +91,60 @@ public class GoogleHelper {
 		this.serpDB = serpDB;
 	}
 
-	public void startScan() {
-	
-	    
-	     
+	public ScanResult startScan(String keyword) {
+		Run run = null;
+		if (run == null)
+			run = new Run(Run.Mode.MANUAL, Group.Module.GOOGLE, LocalDateTime.now());
+
+		taskManager.startGoogleTask(run);
+
+		GoogleTaskResult results = taskManager.waitGoogleTask(run);
+		if (results != null) {
+			List<GoogleRank> ranks = results.getRanks();
+
+			for (GoogleRank rank : ranks) {
+				GoogleSearch s = googleDB.search.find(rank.googleSearchId);
+				if (s.getKeyword().equals(keyword))
+					return new ScanResult(s, rank.rank);
+			}
+		} else
+			LOG.info("Result is null");
+
+		return null;
+	}
+
+	public ScanResult[] startScan(String[] keywords) {
+		ScanResult[] res = new ScanResult[keywords.length];
+		Run run = null;
+		if (run == null)
+			run = new Run(Run.Mode.MANUAL, Group.Module.GOOGLE, LocalDateTime.now());
+
+		taskManager.startGoogleTask(run);
+
+		GoogleTaskResult results = taskManager.waitGoogleTask(run);
+		if (results != null) {
+			List<GoogleRank> ranks = results.getRanks();
+
+			int index = 0;
+			for (GoogleRank rank : ranks) {
+				
+				GoogleSearch s = googleDB.search.find(rank.googleSearchId);
+				for (String keyword : keywords) {
+					if (s.getKeyword().equals(keyword)) {
+						res[index] = new ScanResult();
+						res[index].setGoogleSearch(s);
+						res[index].setRank(rank.rank);
+						index++;
+						break;
+					}
+
+				}
+				
+			}
+		} else
+			LOG.info("Result is null");
+
+		return res;
 	}
 
 	public GoogleSearch addSearch(Group group, String keyword, String country, String datacenter, Integer device,

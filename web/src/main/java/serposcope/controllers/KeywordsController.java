@@ -1,5 +1,7 @@
 package serposcope.controllers;
 
+import static com.serphacker.serposcope.models.base.Group.Module.GOOGLE;
+
 import java.net.IDN;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -15,11 +17,14 @@ import com.serphacker.serposcope.models.base.Group;
 import com.serphacker.serposcope.models.base.Run;
 import com.serphacker.serposcope.models.base.User;
 import com.serphacker.serposcope.models.base.Group.Module;
+import com.serphacker.serposcope.models.google.GoogleRank;
 import com.serphacker.serposcope.models.google.GoogleSearch;
 import com.serphacker.serposcope.models.google.GoogleTarget;
 import com.serphacker.serposcope.models.google.GoogleTarget.PatternType;
 import com.serphacker.serposcope.scraper.google.GoogleCountryCode;
 import com.serphacker.serposcope.scraper.google.GoogleDevice;
+import com.serphacker.serposcope.task.TaskManager;
+import com.serphacker.serposcope.task.google.GoogleTaskResult;
 
 import conf.SerposcopeConf;
 
@@ -41,6 +46,7 @@ import ninja.session.Session;
 import serposcope.controllers.google.GoogleGroupController;
 import serposcope.helpers.GoogleHelper;
 import serposcope.helpers.Validator;
+import serposcope.helpers.objects.ScanResult;
 
 @Singleton
 public class KeywordsController extends BaseController {
@@ -63,6 +69,12 @@ public class KeywordsController extends BaseController {
 	@Inject
 	SerposcopeConf conf;
 
+	@Inject
+	TaskManager taskManager;
+	
+	@Inject
+	GoogleHelper gHelper;
+
 	static final String email = "abaltser@akolchin.com";
 	static final String password = "qewret";
 
@@ -70,10 +82,11 @@ public class KeywordsController extends BaseController {
 
 	static final String websiteCheckerGroup = "DM Website Checker";
 
-	public Result getTest(@Param("arr[]") String[] arr) {
+	static final Boolean update = false;
+
+	public Result getTest() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("key", "dfsgdf");
-		GoogleHelper gHelper = new GoogleHelper(baseDB, googleDB);
 
 		Group group = gHelper.getOrCreateGroup(websiteCheckerGroup);
 
@@ -89,7 +102,7 @@ public class KeywordsController extends BaseController {
 		GoogleSearch search = gHelper.addSearch(group, keyword, countryCode.toString(), "", 0, "", "");
 		if (target == null || search == null)
 			m.put("isError", true);
-			
+
 		
 		return Results.json().render(m);
 
@@ -104,8 +117,6 @@ public class KeywordsController extends BaseController {
 			return Results.json().render(m);
 		}
 		m.put("isError", false);
-
-		GoogleHelper gHelper = new GoogleHelper(baseDB, googleDB);
 
 		Group group = gHelper.getOrCreateGroup(websiteCheckerGroup);
 
@@ -131,6 +142,9 @@ public class KeywordsController extends BaseController {
 			}
 			m.put("search[]", kws);
 		}
+		
+		ScanResult[] results = gHelper.startScan(keywords);
+		m.put("SCAN_RESULTS", results);
 		return Results.json().render(m);
 	}
 
