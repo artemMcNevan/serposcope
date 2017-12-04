@@ -53,8 +53,8 @@ public class KeywordsController extends BaseController {
 	@Inject
 	GoogleHelper gHelper;
 
-	static final String email = "oliver@digitalmonopoly.com.au";
-	static final String password = "PerthWeb99";
+	static final String email = "abaltser@akolchin.com";
+	static final String password = "qewret";
 
 	static final String[] targetTypes = { "DOMAIN", "SUBDOMAIN", "REGEX" };
 
