@@ -1,51 +1,29 @@
 package serposcope.controllers;
 
-import static com.serphacker.serposcope.models.base.Group.Module.GOOGLE;
-
-import java.net.IDN;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import com.serphacker.serposcope.db.base.BaseDB;
 import com.serphacker.serposcope.db.google.GoogleDB;
 import com.serphacker.serposcope.models.base.Group;
-import com.serphacker.serposcope.models.base.Run;
 import com.serphacker.serposcope.models.base.User;
-import com.serphacker.serposcope.models.base.Group.Module;
-import com.serphacker.serposcope.models.google.GoogleRank;
 import com.serphacker.serposcope.models.google.GoogleSearch;
 import com.serphacker.serposcope.models.google.GoogleTarget;
-import com.serphacker.serposcope.models.google.GoogleTarget.PatternType;
 import com.serphacker.serposcope.scraper.google.GoogleCountryCode;
-import com.serphacker.serposcope.scraper.google.GoogleDevice;
 import com.serphacker.serposcope.task.TaskManager;
-import com.serphacker.serposcope.task.google.GoogleTaskResult;
-
 import conf.SerposcopeConf;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import ninja.Context;
 import ninja.Result;
 import ninja.Results;
 import ninja.Router;
 import ninja.params.Param;
-import ninja.params.Params;
-import ninja.session.FlashScope;
 import ninja.session.Session;
-import serposcope.controllers.google.GoogleGroupController;
 import serposcope.helpers.GoogleHelper;
-import serposcope.helpers.Validator;
 import serposcope.helpers.objects.ScanResult;
 
 @Singleton
@@ -71,7 +49,7 @@ public class KeywordsController extends BaseController {
 
 	@Inject
 	TaskManager taskManager;
-	
+
 	@Inject
 	GoogleHelper gHelper;
 
@@ -81,32 +59,6 @@ public class KeywordsController extends BaseController {
 	static final String[] targetTypes = { "DOMAIN", "SUBDOMAIN", "REGEX" };
 
 	static final String websiteCheckerGroup = "DM Website Checker";
-
-	static final Boolean update = false;
-
-	public Result getTest() {
-		Map<String, Object> m = new HashMap<String, Object>();
-		m.put("key", "dfsgdf");
-
-		Group group = gHelper.getOrCreateGroup(websiteCheckerGroup);
-
-		String website = "www.digitalmonopoly.com";
-		String country = "AU";
-		String keyword = "digital agency perth";
-
-		String targetType = targetTypes[0];
-		String name = website;
-		String pattern = website;
-		GoogleCountryCode countryCode = GoogleCountryCode.valueOf(country);
-		GoogleTarget target = gHelper.addWebsite(group, targetType, name, pattern);
-		GoogleSearch search = gHelper.addSearch(group, keyword, countryCode.toString(), "", 0, "", "");
-		if (target == null || search == null)
-			m.put("isError", true);
-
-		
-		return Results.json().render(m);
-
-	}
 
 	public Result api(Context context, @Param("website") String website, @Param("country") String country,
 			@Param("keyword[]") String[] keywords) {
@@ -142,9 +94,9 @@ public class KeywordsController extends BaseController {
 			}
 			m.put("search[]", kws);
 		}
-		
+
 		ScanResult[] results = gHelper.startScan(keywords);
-		m.put("SCAN_RESULTS", results);
+		m.put("scan_results", results);
 		return Results.json().render(m);
 	}
 

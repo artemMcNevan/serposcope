@@ -1,33 +1,13 @@
 package serposcope.helpers;
 
-import static com.serphacker.serposcope.models.base.Group.Module.GOOGLE;
-
 import java.net.IDN;
-import java.sql.Connection;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import javax.inject.Inject;
-
-import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mysema.commons.lang.CloseableIterator;
-import com.querydsl.core.Tuple;
-import com.querydsl.sql.SQLQuery;
 import com.serphacker.serposcope.db.base.BaseDB;
 import com.serphacker.serposcope.db.google.GoogleDB;
 import com.serphacker.serposcope.db.google.GoogleRankDB;
@@ -36,28 +16,18 @@ import com.serphacker.serposcope.db.google.GoogleSerpDB;
 import com.serphacker.serposcope.db.google.GoogleTargetSummaryDB;
 import com.serphacker.serposcope.models.base.Group;
 import com.serphacker.serposcope.models.base.Run;
-import com.serphacker.serposcope.models.base.User;
 import com.serphacker.serposcope.models.base.Group.Module;
-import com.serphacker.serposcope.models.google.GoogleBest;
 import com.serphacker.serposcope.models.google.GoogleRank;
 import com.serphacker.serposcope.models.google.GoogleSearch;
-import com.serphacker.serposcope.models.google.GoogleSerp;
 import com.serphacker.serposcope.models.google.GoogleTarget;
-import com.serphacker.serposcope.models.google.GoogleTargetSummary;
 import com.serphacker.serposcope.models.google.GoogleTarget.PatternType;
 import com.serphacker.serposcope.scraper.google.GoogleCountryCode;
 import com.serphacker.serposcope.scraper.google.GoogleDevice;
 import com.serphacker.serposcope.task.TaskManager;
 import com.serphacker.serposcope.task.google.GoogleTaskResult;
-
-import ninja.Context;
-import ninja.Results;
-import ninja.session.FlashScope;
-import serposcope.controllers.HomeController;
 import serposcope.helpers.objects.ScanResult;
 
 public class GoogleHelper {
-
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleHelper.class);
 
 	protected BaseDB baseDB;
