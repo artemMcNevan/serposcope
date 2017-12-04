@@ -33,8 +33,9 @@ public class Routes implements ApplicationRoutes {
     @Override
     public void init(Router router) {  
     	
-    	//Api
+    	//Keywords
         router.GET().route("/api").with(KeywordsController.class, "api");
+        router.GET().route("/checker").with(KeywordsController.class, "viewChecker");
         
         // authentication
         router.GET().route("/create-admin").with(AuthController.class, "createAdmin");

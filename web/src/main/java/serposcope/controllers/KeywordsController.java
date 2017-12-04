@@ -53,8 +53,8 @@ public class KeywordsController extends BaseController {
 	@Inject
 	GoogleHelper gHelper;
 
-	static final String email = "abaltser@akolchin.com";
-	static final String password = "qewret";
+	static final String email = "oliver@digitalmonopoly.com.au";
+	static final String password = "PerthWeb99";
 
 	static final String[] targetTypes = { "DOMAIN", "SUBDOMAIN", "REGEX" };
 
@@ -98,6 +98,10 @@ public class KeywordsController extends BaseController {
 		ScanResult[] results = gHelper.startScan(keywords);
 		m.put("scan_results", results);
 		return Results.json().render(m);
+	}
+	
+	public Result viewChecker() {
+		return Results.ok();
 	}
 
 	public boolean login(Context context, String email, String password, Boolean rememberMe) {
