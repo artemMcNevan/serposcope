@@ -75,7 +75,9 @@ public class KeywordsController extends BaseController {
 		String targetType = targetTypes[0];
 		String name = website;
 		String pattern = website;
-		GoogleCountryCode countryCode = GoogleCountryCode.valueOf(country);
+		
+		
+		GoogleCountryCode countryCode = GoogleCountryCode.findByFancy(country);
 		GoogleTarget target = gHelper.addWebsite(group, targetType, name, pattern);
 
 		m.put("website", website);
@@ -98,6 +100,15 @@ public class KeywordsController extends BaseController {
 		ScanResult[] results = gHelper.startScan(keywords);
 		m.put("scan_results", results);
 		return Results.json().render(m);
+	}
+	
+	public Result getCountries() {
+		GoogleCountryCode[] codes = GoogleCountryCode.values();
+		String[] countries = new String[codes.length];
+		for(int i = 0; i < codes.length; i++) {
+			countries[i] = codes[i].fancyName;
+		}
+		return Results.json().render(countries);
 	}
 	
 	public Result viewChecker() {

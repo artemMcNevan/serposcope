@@ -255,4 +255,13 @@ public enum GoogleCountryCode {
         this.fancyName = fancyName;
     }
     
+    public static GoogleCountryCode findByFancy(String fancyName) {
+    	GoogleCountryCode[] codes = values();
+    	for(GoogleCountryCode code : codes) {
+    		if(code.fancyName.equals(fancyName))
+    			return code;
+    	}
+    	return null;
+    }
+    
 }

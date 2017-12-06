@@ -35,6 +35,7 @@ public class Routes implements ApplicationRoutes {
     	
     	//Keywords
         router.GET().route("/api").with(KeywordsController.class, "api");
+        router.GET().route("/countries").with(KeywordsController.class, "getCountries");
         router.GET().route("/checker").with(KeywordsController.class, "viewChecker");
         
         // authentication
