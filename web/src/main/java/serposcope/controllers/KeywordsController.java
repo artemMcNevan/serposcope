@@ -52,6 +52,8 @@ public class KeywordsController extends BaseController {
 
 	@Inject
 	GoogleHelper gHelper;
+	
+	static final String[] countries = countries();
 
 	static final String email = "abaltser@akolchin.com";
 	static final String password = "qewret";
@@ -78,6 +80,10 @@ public class KeywordsController extends BaseController {
 		
 		
 		GoogleCountryCode countryCode = GoogleCountryCode.findByFancy(country);
+		if(countryCode == null) {
+			m.put("isError", true);
+			return Results.json().render(m);
+		}
 		GoogleTarget target = gHelper.addWebsite(group, targetType, name, pattern);
 
 		m.put("website", website);
@@ -99,16 +105,20 @@ public class KeywordsController extends BaseController {
 
 		ScanResult[] results = gHelper.startScan(keywords);
 		m.put("scan_results", results);
-		return Results.json().render(m);
+		return Results.json().addHeader("Access-Control-Allow-Origin", "*").render(m);
 	}
 	
 	public Result getCountries() {
+		return Results.json().addHeader("Access-Control-Allow-Origin", "*").render(countries != null ? countries : "");
+	}
+	
+	public static String[] countries() {
 		GoogleCountryCode[] codes = GoogleCountryCode.values();
 		String[] countries = new String[codes.length];
 		for(int i = 0; i < codes.length; i++) {
 			countries[i] = codes[i].fancyName;
 		}
-		return Results.json().render(countries);
+		return countries;
 	}
 	
 	public Result viewChecker() {

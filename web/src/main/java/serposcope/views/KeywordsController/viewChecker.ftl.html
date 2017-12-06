@@ -731,13 +731,7 @@ Click the help icon above to learn more.
 							</div>
 							<script>
 							$(document).ready(function(){
-								jQuery.get("/countries", function(data){
-									var elem = $("#countries");
-									for(var i = 0; i < data.length; i++){
-										var country = data[i];
-										elem.append("<option>" + country + "</option>")
-									}
-								});
+								
 							});
 								function submitKeywordsForm(){
 									alert("ok");
