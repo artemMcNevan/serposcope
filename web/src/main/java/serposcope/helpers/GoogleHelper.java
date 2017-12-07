@@ -84,6 +84,7 @@ public class GoogleHelper {
 	}
 
 	public ScanResult[] startScan(String[] keywords) {
+		LOG.info("kw length : " + keywords.length);
 		ScanResult[] res = new ScanResult[keywords.length];
 		Run run = null;
 		if (run == null)
@@ -93,23 +94,28 @@ public class GoogleHelper {
 
 		GoogleTaskResult results = taskManager.waitGoogleTask(run);
 		if (results != null) {
-			List<GoogleRank> ranks = results.getRanks();
-
-			int index = 0;
-			for (GoogleRank rank : ranks) {
-				
-				GoogleSearch s = googleDB.search.find(rank.googleSearchId);
-				for (String keyword : keywords) {
-					if (s.getKeyword().equals(keyword)) {
-						res[index] = new ScanResult();
-						res[index].setGoogleSearch(s);
-						res[index].setRank(rank.rank);
-						index++;
-						break;
+			try {
+				List<GoogleRank> ranks = results.getRanks();
+	
+				int index = 0;
+				for (GoogleRank rank : ranks) {
+					
+					GoogleSearch s = googleDB.search.find(rank.googleSearchId);
+					for (String keyword : keywords) {
+						if (s.getKeyword().equals(keyword)) {
+							res[index] = new ScanResult();
+							res[index].setGoogleSearch(s);
+							res[index].setRank(rank.rank);
+							index++;
+							break;
+						}
+	
 					}
-
+					if(index >= keywords.length)
+						break;
 				}
-				
+			}catch(Exception e) {
+				e.printStackTrace();
 			}
 		} else
 			LOG.info("Result is null");
