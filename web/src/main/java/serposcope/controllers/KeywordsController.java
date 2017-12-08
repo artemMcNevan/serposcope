@@ -2,7 +2,9 @@ package serposcope.controllers;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import com.serphacker.serposcope.db.base.BaseDB;
 import com.serphacker.serposcope.db.google.GoogleDB;
@@ -84,26 +86,34 @@ public class KeywordsController extends BaseController {
 			m.put("isError", true);
 			return Results.json().render(m);
 		}
-		GoogleTarget target = gHelper.addWebsite(group, targetType, name, pattern);
-
+		
+		List<GoogleTarget> targets = new ArrayList<GoogleTarget>();
+		GoogleTarget target = gHelper.getOrAddWebsite(group, targetType, name, pattern);
+		targets.add(target);
+		
 		m.put("website", website);
 
 		m.put("group", group.getName());
 		if (target != null)
 			m.put("target", target.getName());
 
+		List<GoogleSearch> searches = new ArrayList<GoogleSearch>();
 		if (keywords != null) {
 			Map<String, Object> kws = new HashMap<String, Object>();
 			for (String keyword : keywords) {
-				GoogleSearch search = gHelper.addSearch(group, keyword, countryCode.toString(), "", 0, "", "");
-				if (search != null)
+				GoogleSearch search = gHelper.getOrAddSearch(group, keyword, countryCode.toString(), "", 0, "", "");
+				if (search != null) {
+					searches.add(search);
 					kws.put(search.getKeyword(), "added");
+				}
 
 			}
 			m.put("search[]", kws);
 		}
+		
+		LOG.info("Before scan. Targets size: " + targets.size() + ". Searches size: " + searches.size() + ".");
 
-		ScanResult[] results = gHelper.startScan(keywords);
+		ScanResult[] results = gHelper.startScan(searches, targets);
 		m.put("scan_results", results);
 		return Results.json().addHeader("Access-Control-Allow-Origin", "*").render(m);
 	}

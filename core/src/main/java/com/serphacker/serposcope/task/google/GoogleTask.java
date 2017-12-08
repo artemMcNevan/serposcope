@@ -75,6 +75,8 @@ public class GoogleTask extends AbstractTask {
 	protected int httpTimeoutMS;
 	protected boolean updateRun;
 	protected boolean shuffle = true;
+	
+	protected boolean customRun = false;
 
 	protected GoogleTaskResult results;
 
@@ -92,16 +94,46 @@ public class GoogleTask extends AbstractTask {
 		httpTimeoutMS = ScrapClient.DEFAULT_TIMEOUT_MS;
 
 	}
+	
+	public void setCustomRun(boolean customRun) {
+		this.customRun = customRun;
+	}
 
+	public void setCustomSearches(List<GoogleSearch> searchList) {
+		searches = new LinkedBlockingQueue<>(searchList);
+	}
+	
+	public void setCustomTargets(List<GoogleTarget> targetList) {
+		Map<Integer, Integer> previousScorePercent = new HashMap<>();
+
+		if (previousRun != null) 
+			previousScorePercent = googleDB.targetSummary.getPreviousScore(previousRun.getId());
+		
+		LOG.debug("Targets by group " + (targetsByGroup == null ? " is null" : "exists"));
+		for(GoogleTarget target : targetList) {
+			LOG.debug("Target " + (target == null ? " is null" : " exists"));
+			LOG.debug("ByGroup " + (targetsByGroup.get(target.getGroupId()) == null ? " is null " : " exists"));
+			if(targetsByGroup.get(target.getGroupId())== null)
+				targetsByGroup.put(target.getGroupId(), new ArrayList<GoogleTarget>());
+			
+			targetsByGroup.get(target.getGroupId()).add(target);
+			summariesByTarget.put(target.getId(), new GoogleTargetSummary(target.getGroupId(), target.getId(),
+					run.getId(), previousScorePercent.getOrDefault(target.getId(), 0)));
+		}
+	}
+	
 	@Override
 	public Run.Status doRun() {
 		results = new GoogleTaskResult();
 		solver = initializeCaptchaSolver();
 		googleOptions = googleDB.options.get();
 
-		initializeSearches();
+		if(!customRun) {
+			initializeSearches();
+			initializeTargets();
+		}
+		
 		initializePreviousRuns();
-		initializeTargets();
 
 		int nThread = googleOptions.getMaxThreads();
 		List<ScrapProxy> proxies = baseDB.proxy.list().stream().map(Proxy::toScrapProxy).collect(Collectors.toList());

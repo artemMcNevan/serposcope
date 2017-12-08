@@ -15,6 +15,8 @@ import com.serphacker.serposcope.models.base.Group;
 import com.serphacker.serposcope.models.base.Group.Module;
 import com.serphacker.serposcope.models.base.Run;
 import com.serphacker.serposcope.models.base.Run.Mode;
+import com.serphacker.serposcope.models.google.GoogleSearch;
+import com.serphacker.serposcope.models.google.GoogleTarget;
 import com.serphacker.serposcope.task.google.GoogleTask;
 import com.serphacker.serposcope.task.google.GoogleTaskResult;
 
@@ -56,6 +58,23 @@ public class TaskManager {
 			}
 
 			googleTask = googleTaskFactory.create(run);
+			googleTask.start();
+			return true;
+		}
+	}
+	
+	public boolean startCustomGoogleTask(Run run, List<GoogleSearch> searches, List<GoogleTarget> targets) {
+		LOG.info("Starting task...");
+		synchronized (googleTaskLock) {
+
+			if (googleTask != null && googleTask.isAlive()) {
+				return false;
+			}
+
+			googleTask = googleTaskFactory.create(run);
+			googleTask.setCustomSearches(searches);
+			googleTask.setCustomTargets(targets);
+			googleTask.setCustomRun(true);
 			googleTask.start();
 			return true;
 		}

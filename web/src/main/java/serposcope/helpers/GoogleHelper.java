@@ -83,38 +83,39 @@ public class GoogleHelper {
 		return null;
 	}
 
-	public ScanResult[] startScan(String[] keywords) {
-		LOG.info("kw length : " + keywords.length);
-		ScanResult[] res = new ScanResult[keywords.length];
+	public ScanResult[] startScan(List<GoogleSearch> searches, List<GoogleTarget> targets) {
+		if (searches == null || targets == null || searches.isEmpty() || targets.isEmpty())
+			return null;
+
+		ScanResult[] res = new ScanResult[searches.size()];
 		Run run = null;
 		if (run == null)
 			run = new Run(Run.Mode.MANUAL, Group.Module.GOOGLE, LocalDateTime.now());
 
-		taskManager.startGoogleTask(run);
+		taskManager.startCustomGoogleTask(run, searches, targets);
 
 		GoogleTaskResult results = taskManager.waitGoogleTask(run);
 		if (results != null) {
 			try {
 				List<GoogleRank> ranks = results.getRanks();
-	
+
 				int index = 0;
 				for (GoogleRank rank : ranks) {
-					
-					GoogleSearch s = googleDB.search.find(rank.googleSearchId);
-					for (String keyword : keywords) {
-						if (s.getKeyword().equals(keyword)) {
-							res[index] = new ScanResult();
-							res[index].setGoogleSearch(s);
-							res[index].setRank(rank.rank);
-							index++;
-							break;
-						}
-	
+
+					GoogleSearch s = findSearchById(searches, rank.googleSearchId);
+
+					if (s != null) {
+						res[index] = new ScanResult();
+						res[index].setGoogleSearch(s);
+						res[index].setRank(rank.rank);
+						index++;
+						break;
 					}
-					if(index >= keywords.length)
+
+					if (index >= searches.size())
 						break;
 				}
-			}catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} else
@@ -123,7 +124,15 @@ public class GoogleHelper {
 		return res;
 	}
 
-	public GoogleSearch addSearch(Group group, String keyword, String country, String datacenter, Integer device,
+	public GoogleSearch findSearchById(List<GoogleSearch> searches, int googleSearchId) {
+		for (GoogleSearch search : searches) {
+			if (search.getId() == googleSearchId)
+				return search;
+		}
+		return null;
+	}
+
+	public GoogleSearch getOrAddSearch(Group group, String keyword, String country, String datacenter, Integer device,
 			String local, String custom) {
 		if (keyword == null || country == null || datacenter == null || device == null || local == null
 				|| custom == null) {
@@ -135,7 +144,7 @@ public class GoogleHelper {
 		for (GoogleSearch sh : foundSearches) {
 			if (sh.getKeyword().toLowerCase().equals(keyword.toLowerCase())) {
 				LOG.info("Can't create search with the same keyword");
-				return null;
+				return sh;
 			}
 		}
 
@@ -193,17 +202,18 @@ public class GoogleHelper {
 		return search;
 	}
 
-	public GoogleTarget addWebsite(Group group, String targetType, String name, String pattern) {
+	public GoogleTarget getOrAddWebsite(Group group, String targetType, String name, String pattern) {
 		if (targetType == null || name == null || pattern == null) {
 			LOG.info("Target insert error #0");
 			return null;
 		}
+		
 		List<GoogleTarget> foundTargets = this.getTargets();
 
 		for (GoogleTarget tg : foundTargets) {
 			if (tg.getName().toLowerCase().equals(name.toLowerCase())) {
 				LOG.info("Can't create target with the same name");
-				return null;
+				return tg;
 			}
 		}
 
