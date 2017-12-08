@@ -89,17 +89,13 @@ public class ProxyChecker extends Thread {
                     
                     
                     int httpStatus = cli.get(judgeUrl);
-                    LOG.info(scrapProxy + " ||| " + cli.getContentAsString());
                     if(httpStatus == 200 && cli.getContentAsString() != null){
                         Matcher matcher = PATTERN_IP.matcher(cli.getContentAsString());
                         if(matcher.find()){
                             proxy.setRemoteip(matcher.group(1));
                             proxyStatus = Proxy.Status.OK;
                         }
-                        else
-                        	LOG.info("Proxy " + judgeUrl + " err| " + cli.getContentAsString());
                     }
-                    LOG.info("Proxy error ");
                     proxy.setStatus(proxyStatus);
                     proxy.setLastCheck(LocalDateTime.now());
                     db.proxy.update(proxy);

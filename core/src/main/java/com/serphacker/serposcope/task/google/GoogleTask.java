@@ -128,12 +128,13 @@ public class GoogleTask extends AbstractTask {
 		solver = initializeCaptchaSolver();
 		googleOptions = googleDB.options.get();
 
+		initializePreviousRuns();
 		if(!customRun) {
 			initializeSearches();
 			initializeTargets();
 		}
 		
-		initializePreviousRuns();
+	
 
 		int nThread = googleOptions.getMaxThreads();
 		List<ScrapProxy> proxies = baseDB.proxy.list().stream().map(Proxy::toScrapProxy).collect(Collectors.toList());
@@ -263,7 +264,8 @@ public class GoogleTask extends AbstractTask {
 						rankedUrl = res.urls.get(i);
 						rank = i + 1;
 						break;
-					}
+					}else
+						LOG.info("PATTERN: " + target.getPattern() + " | URL: " + res.urls.get(i));
 				}
 
 				int previousRank = GoogleRank.UNRANKED;

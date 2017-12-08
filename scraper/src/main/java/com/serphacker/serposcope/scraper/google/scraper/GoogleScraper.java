@@ -106,7 +106,8 @@ public class GoogleScraper {
                     if(status == Status.OK){
                         break;
                     }
-                }
+                }else
+                	LOG.debug("SCRAPER|Status:  " + status);
                 
                 if(!isRetryableStatus(status)){
                     break;
@@ -209,9 +210,12 @@ public class GoogleScraper {
             }
             
             String link = extractLink(h3Elt.getElementsByTag("a").first());
+            LOG.debug("SCRAPER|ExtractLink " + link);
             if(link != null){
                 urls.add(link);
-            }            
+            }else {
+            	LOG.debug("SCRAPER|HTML: " + (h3Elt.getElementsByTag("a").first() == null ? null : h3Elt.getElementsByTag("a").first().toString()));
+            }
         }
         
         return Status.OK;
